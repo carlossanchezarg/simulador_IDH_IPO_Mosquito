@@ -76,7 +76,7 @@ code{font-size:.9em}
 
 <details class="box"><summary>¿Cómo funciona el modelo?</summary>
 <ol>
-<li><b>Clima semanal.</b> Temperatura y lluvia siguen una curva suave a lo largo del año, con el verano en enero. Las semanas van de la SE31 a la SE30, como en el BEN.</li>
+<li><b>Clima semanal.</b> Temperatura y lluvia siguen una curva suave a lo largo del año, con el verano en enero. Las semanas van de la SE31 (fines de julio) a la SE30 del año siguiente, como en el BEN. La línea punteada marca el 1 de enero, y la franja gris, el verano (del 21 de diciembre al 20 de marzo). Los meses son aproximados, porque las semanas epidemiológicas no coinciden exactamente con el calendario.</li>
 <li><b>Cuánto permite el clima (de 0 a 1).</b> Temperatura: 0 por debajo de ≈12 °C, máximo en ≈28 °C y baja de nuevo hacia 38 °C. Agua: la lluvia deja agua en recipientes que dura unas semanas; más agua ayuda, pero cada vez menos. Se suma un poco de agua que acumula la gente (tachos, tanques).</li>
 <li><b>Abundancia del mosquito (N).</b> Cada semana se acerca a lo que permite el clima, pero con “memoria”: las poblaciones tardan semanas en crecer o caer. Por eso la curva llega después que la temperatura.</li>
 <li><b>Índices.</b> <code>IPO = 100 × (1 − e<sup>−3N</sup>)</code>: es una proporción y se satura, porque cuando hay muchos mosquitos casi todas las ovitrampas dan positivo. <code>IDH = 60 × N</code>: cuenta huevos y sigue creciendo aunque el IPO ya no suba. Las franjas de riesgo (bajo &lt; 40 %, moderado 40–70 %, alto &gt; 70 %) son las del BEN.</li>
@@ -87,7 +87,8 @@ code{font-size:.9em}
 <script>
 const $=id=>document.getElementById(id);
 const SE=i=>(30+i)%52+1;
-const W=480,H=230,L=36,R=46,T=16,B=32,PW=W-L-R,PH=H-T-B;
+const MES=[[.71,'Ago'],[5.14,'Sep'],[9.43,'Oct'],[13.86,'Nov'],[18.14,'Dic'],[22.57,'Ene'],[27,'Feb'],[31,'Mar'],[35.43,'Abr'],[39.71,'May'],[44.14,'Jun'],[48.43,'Jul']];
+const W=480,H=254,L=36,R=46,T=16,B=56,PW=W-L-R,PH=H-T-B;
 const xs=i=>L+(i+.5)*PW/52,ys=(v,m)=>T+PH-Math.max(0,Math.min(v,m))/m*PH;
 function sim(p){
  let n=0,w=0,out=[];
@@ -108,7 +109,11 @@ function base(m1,m2,u1,u2){
  for(let k=0;k<=4;k++){const y=T+PH*k/4;
   s+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${L-5}" y="${y+4}" text-anchor="end">${Math.round(m1*(1-k/4))}</text>`;
   if(m2)s+=`<text x="${W-R+5}" y="${y+4}">${Math.round(m2*(1-k/4))}</text>`}
- for(let i=0;i<52;i+=6)s+=`<text x="${xs(i)}" y="${H-B+16}" text-anchor="middle">SE${SE(i)}</text>`;
+ for(let i=0;i<52;i+=6)s+=`<text x="${xs(i)}" y="${H-B+14}" text-anchor="middle">SE${SE(i)}</text>`;
+ const X=f=>L+f*PW/52;
+ s+=`<rect x="${X(21)}" y="${T}" width="${X(33.9)-X(21)}" height="${PH}" fill="var(--ink)" opacity=".07"/><text x="${X(27.45)}" y="11" text-anchor="middle" style="font-size:10px">verano</text>`;
+ MES.forEach((m,j)=>{const b=(MES[j+1]||[52.1])[0];s+=`<text x="${X((m[0]+b)/2)}" y="${H-B+29}" text-anchor="middle">${m[1]}</text>`});
+ s+=`<line x1="${X(22.57)}" x2="${X(22.57)}" y1="${T}" y2="${H-B+48}" stroke="var(--mute)" stroke-dasharray="4 3"/><text x="${X(11.3)}" y="${H-B+46}" text-anchor="middle">año 1</text><text x="${X(37.3)}" y="${H-B+46}" text-anchor="middle">año 2</text>`;
  return s}
 const pts=(a,m)=>a.map((v,i)=>xs(i).toFixed(1)+','+ys(v,m).toFixed(1)).join(' ');
 function clima(d){
