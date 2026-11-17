@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulador de IPO e IDH</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#eaf3f6;--card:#fff;--ink:#12303d;--mute:#52707d;--line:#b9d0d9;--accent:#0f7c8a;--ok:#2a7d46;color-scheme:light dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1c22;--card:#17282f;--ink:#e4f0f4;--mute:#94b0bb;--line:#2e4650;--accent:#4cc3d1;--ok:#6fd08c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1c22;--card:#17282f;--ink:#e4f0f4;--mute:#94b0bb;--line:#2e4650;--accent:#4cc3d1;--ok:#6fd08c;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Avenir Next","Segoe UI",system-ui,sans-serif}
+main{max-width:860px;margin:0 auto;padding:20px 16px 36px}
+h1{font-size:1.65rem;line-height:1.2;margin:0 0 6px}
+h2{font-size:1.1rem;margin:22px 0 8px}
+.sub{color:var(--mute);margin:0 0 14px;max-width:64ch}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.ctl{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+label{display:block;font-size:.92rem}
+label b{float:right}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.sc{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 2px;align-items:center;font-size:.88rem;color:var(--mute)}
+button{font:inherit;color:inherit;cursor:pointer;padding:6px 12px;border-radius:999px;border:1.5px solid var(--accent);background:var(--card)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--mute);font-size:11px}
+.leg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;color:var(--mute);margin-top:4px}
+.leg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.kpi{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-top:12px}
+.kpi div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px}
+.kpi b{display:block;font-size:1.3rem;line-height:1.2}
+.kpi span{font-size:.8rem;color:var(--mute)}
+details{margin-top:14px}
+summary{cursor:pointer;font-weight:700}
+details p,details li,.try li{max-width:68ch}
+code{font-size:.9em}
+</style>
+</head>
+<body>
+<main>
+<h1>Simulador de IPO e IDH</h1>
+<p class="sub">Elegí cómo es el clima de un año y mirá qué actividad del mosquito <i>Aedes aegypti</i> “esperaría” un modelo muy simple. Es un modelo de juguete para pensar, no una predicción real.</p>
+
+<div class="box">
+<div class="ctl">
+<label>Temperatura media anual <b id="vtm"></b><input type="range" id="tm" min="10" max="26" step="0.5" value="20"></label>
+<label>Diferencia verano–invierno <b id="vamp"></b><input type="range" id="amp" min="0" max="10" step="0.5" value="6"></label>
+<label>Lluvia semanal media <b id="vr"></b><input type="range" id="r" min="0" max="60" step="1" value="20"></label>
+<label>Lluvia concentrada en verano <b id="vc"></b><input type="range" id="c" min="0" max="100" step="5" value="60"></label>
+</div>
+<div class="sc">Escenarios de ejemplo (inventados):
+<button data-s="20,6,20,60">Punto de partida</button>
+<button data-s="24,5,35,60">Cálido y lluvioso</button>
+<button data-s="24,5,6,60">Cálido y seco</button>
+<button data-s="14,8,15,50">Fresco</button>
+</div>
+</div>
+
+<h2>1. El clima que le damos al modelo</h2>
+<div class="box"><div id="c1"></div>
+<div class="leg"><span><i style="background:#d64a3a"></i>Temperatura media semanal</span><span><i style="background:#4a9fd0"></i>Lluvia semanal</span></div></div>
+
+<h2>2. Lo que el modelo espera del mosquito</h2>
+<div class="box"><div id="c2"></div>
+<div class="leg"><span><i style="background:#f59e0b"></i>IPO: % de ovitrampas positivas</span><span><i style="background:#3b82d6"></i>IDH: huevos por ovitrampa positiva</span></div></div>
+<div class="kpi" id="kpi"></div>
+
+<h2>Probá esto</h2>
+<ol class="try">
+<li>Subí la temperatura media unos 3 °C. ¿Cambia cuándo empieza y cuándo termina la temporada? ¿Cambia el pico?</li>
+<li>Poné la lluvia en 0. ¿Desaparece el mosquito? ¿Qué agua queda en el modelo y qué agua queda en la vida real?</li>
+<li>Compará el pico de temperatura (enero) con el pico de IPO. ¿Por qué hay una diferencia de semanas?</li>
+<li>Mirá el IPO y el IDH cuando hay muchos mosquitos. ¿Cuál de los dos sigue subiendo y cuál se “aplana”?</li>
+</ol>
+
+<details class="box"><summary>¿Cómo funciona el modelo?</summary>
+<ol>
+<li><b>Clima semanal.</b> Temperatura y lluvia siguen una curva suave a lo largo del año, con el verano en enero. Las semanas van de la SE31 a la SE30, como en el BEN.</li>
+<li><b>Cuánto permite el clima (de 0 a 1).</b> Temperatura: 0 por debajo de ≈12 °C, máximo en ≈28 °C y baja de nuevo hacia 38 °C. Agua: la lluvia deja agua en recipientes que dura unas semanas; más agua ayuda, pero cada vez menos. Se suma un poco de agua que acumula la gente (tachos, tanques).</li>
+<li><b>Abundancia del mosquito (N).</b> Cada semana se acerca a lo que permite el clima, pero con “memoria”: las poblaciones tardan semanas en crecer o caer. Por eso la curva llega después que la temperatura.</li>
+<li><b>Índices.</b> <code>IPO = 100 × (1 − e<sup>−3N</sup>)</code>: es una proporción y se satura, porque cuando hay muchos mosquitos casi todas las ovitrampas dan positivo. <code>IDH = 60 × N</code>: cuenta huevos y sigue creciendo aunque el IPO ya no suba. Las franjas de riesgo (bajo &lt; 40 %, moderado 40–70 %, alto &gt; 70 %) son las del BEN.</li>
+</ol>
+<p><b>Qué no incluye:</b> humedad, viento, lluvias tan fuertes que arrastran larvas, control de criaderos y fumigación, llegada de poblaciones de otras zonas ni diferencias entre poblaciones de mosquitos. Los umbrales de temperatura son aproximados. Ningún valor está calibrado con datos reales.</p>
+</details>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const SE=i=>(30+i)%52+1;
+const W=480,H=230,L=36,R=46,T=16,B=32,PW=W-L-R,PH=H-T-B;
+const xs=i=>L+(i+.5)*PW/52,ys=(v,m)=>T+PH-Math.max(0,Math.min(v,m))/m*PH;
+function sim(p){
+ let n=0,w=0,out=[];
+ for(let k=0;k<156;k++){
+  const i=k%52,ph=Math.cos(2*Math.PI*(i-24)/52);
+  const t=p.tm+p.amp*ph,rain=Math.max(0,p.r*(1+p.c*ph));
+  w=0.6*w+rain;
+  const sT=t<=12||t>=38?0:(t<28?(t-12)/16:(38-t)/10);
+  const sR=0.15+0.85*(1-Math.exp(-w/50));
+  n+=0.2*(sT*sR-n);
+  if(k>=104)out.push({t,rain,n,ipo:100*(1-Math.exp(-3*n)),idh:60*n});
+ }
+ return out;
+}
+function base(m1,m2,u1,u2){
+ let s=`<text x="${L}" y="10" style="font-weight:700">${u1}</text>`;
+ if(u2)s+=`<text x="${W-R}" y="10" text-anchor="end" style="font-weight:700">${u2}</text>`;
+ for(let k=0;k<=4;k++){const y=T+PH*k/4;
+  s+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${L-5}" y="${y+4}" text-anchor="end">${Math.round(m1*(1-k/4))}</text>`;
+  if(m2)s+=`<text x="${W-R+5}" y="${y+4}">${Math.round(m2*(1-k/4))}</text>`}
+ for(let i=0;i<52;i+=6)s+=`<text x="${xs(i)}" y="${H-B+16}" text-anchor="middle">SE${SE(i)}</text>`;
+ return s}
+const pts=(a,m)=>a.map((v,i)=>xs(i).toFixed(1)+','+ys(v,m).toFixed(1)).join(' ');
+function clima(d){
+ const m2=Math.max(40,Math.ceil(Math.max(...d.map(o=>o.rain))/20)*20),bw=PW/52*.8;
+ let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Temperatura y lluvia semanales a lo largo del año">`+base(40,m2,'°C','mm/semana');
+ d.forEach((o,i)=>{const y=ys(o.rain,m2);s+=`<rect x="${xs(i)-bw/2}" y="${y}" width="${bw}" height="${T+PH-y}" fill="#4a9fd0" opacity=".6"/>`});
+ return s+`<polyline fill="none" stroke="#d64a3a" stroke-width="2.4" points="${pts(d.map(o=>o.t),40)}"/></svg>`}
+function mosq(d){
+ let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="IPO e IDH esperados a lo largo del año">`;
+ [[0,40,'rgba(42,157,90,.16)','bajo'],[40,70,'rgba(230,160,20,.22)','moderado'],[70,100,'rgba(210,70,50,.18)','alto']].forEach(b=>{
+  const y1=ys(b[1],100),y2=ys(b[0],100);
+  s+=`<rect x="${L}" y="${y1}" width="${PW}" height="${y2-y1}" fill="${b[2]}"/><text x="${W-R+4}" y="${(y1+y2)/2+4}" style="font-size:10px">${b[3]}</text>`});
+ s+=base(100,0,'IPO (%) e IDH','');
+ const y0=ys(0,100),ip=pts(d.map(o=>o.ipo),100);
+ s+=`<polygon points="${xs(0)},${y0} ${ip} ${xs(51)},${y0}" fill="rgba(245,158,11,.4)" stroke="#f59e0b" stroke-width="2.2"/>`;
+ return s+`<polyline fill="none" stroke="#3b82d6" stroke-width="2.4" points="${pts(d.map(o=>o.idh),100)}"/></svg>`}
+function update(){
+ const U={tm:' °C',amp:' °C',r:' mm',c:' %'};
+ Object.keys(U).forEach(k=>$('v'+k).textContent=$(k).value+U[k]);
+ const d=sim({tm:+$('tm').value,amp:+$('amp').value,r:+$('r').value,c:$('c').value/100});
+ $('c1').innerHTML=clima(d);$('c2').innerHTML=mosq(d);
+ const ipo=d.map(o=>o.ipo),pk=Math.max(...ipo),ip=ipo.indexOf(pk);
+ const cat=pk>70?'alto':pk>=40?'moderado':'bajo',lag=((ip-24+78)%52)-26;
+ const lt=pk<5?'casi no hay actividad':lag>0?lag+' semanas después':lag<0?(-lag)+' semanas antes':'en la misma semana';
+ const K=[[pk.toFixed(0)+' %','Pico de IPO, en la SE'+SE(ip)],[cat,'Riesgo en el pico'],[ipo.filter(v=>v>70).length,'Semanas con riesgo alto'],[ipo.filter(v=>v>=5).length+' de 52','Semanas con IPO de 5 % o más'],[lt,'Pico de IPO respecto del pico de temperatura (SE03)']];
+ $('kpi').innerHTML=K.map(k=>`<div><b>${k[0]}</b><span>${k[1]}</span></div>`).join('');
+}
+document.querySelectorAll('input').forEach(e=>e.addEventListener('input',update));
+document.querySelectorAll('[data-s]').forEach(b=>b.addEventListener('click',()=>{
+ const v=b.dataset.s.split(',');['tm','amp','r','c'].forEach((k,i)=>$(k).value=v[i]);update()}));
+update();
+</script>
+</body>
+</html>
