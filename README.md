@@ -2,4 +2,4 @@
 
 ### QR URL    
 
-![QR URL](images/screenshot.png)   
+![QR URL](img/qr_simulador.png)   
